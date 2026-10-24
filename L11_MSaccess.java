@@ -1,97 +1,58 @@
 import java.sql.*;
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.util.Scanner;
 
 public class L11_MSaccess {
+    public static void main(String[] args) throws Exception {
+        String url = "jdbc:ucanaccess://" +
+            new File("ICE_PUST.accdb").getAbsolutePath()
+            + ";newDatabaseVersion=V2010";
 
-    public static void main(String[] args) {
+        Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
 
-        String databasePath = new File("ICE_PUST.accdb").getAbsolutePath();
-        String url = "jdbc:ucanaccess://" + databasePath
-                + ";newDatabaseVersion=V2010";
+        try (Connection con = DriverManager.getConnection(url);
+             Scanner sc = new Scanner(System.in)) {
 
-        try {
-            Class.forName("net.ucanaccess.jdbc.UcanaccessDriver");
+            ResultSet t = con.getMetaData().getTables(
+                null, null, "STUDENT", new String[]{"TABLE"});
 
-            Connection con = DriverManager.getConnection(url);
-            System.out.println("Database connection successful.");
-
-            DatabaseMetaData metaData = con.getMetaData();
-            boolean tableExists = false;
-
-            try (ResultSet table = metaData.getTables(
-                    null, null, "Student", new String[]{"TABLE"})) {
-
-                if (table.next()) {
-                    tableExists = true;
-                }
+            if (!t.next()) {
+                con.createStatement().executeUpdate(
+                    "CREATE TABLE STUDENT ([Name] TEXT(100), " +
+                    "Email TEXT(100), Phone TEXT(30))");
+                System.out.println("Student table created.");
             }
+            t.close();
 
-            if (!tableExists) {
-                Statement st = con.createStatement();
+            PreparedStatement ps = con.prepareStatement(
+                "INSERT INTO STUDENT ([Name], Email, Phone) VALUES (?, ?, ?)");
 
-                st.executeUpdate(
-                        "CREATE TABLE STUDENT ("
-                        + "[Name] Text(100), "
-                        + "[Email] Text(100), "
-                        + "[Phone] Text(30))"
-                );
-
-                st.close();
-                System.out.println("Student table created successfully.");
-
-            } else {
-                System.out.println("Student table already exists.");
-            }
-
-            Scanner sc = new Scanner(System.in);
-
-            String sql = "INSERT INTO STUDENT ([Name], Email, Phone) "
-                    + "VALUES (?, ?, ?)";
-
-            PreparedStatement ps = con.prepareStatement(sql);
-
-            System.out.print("Enter student name: ");
+            System.out.print("Enter name: ");
             ps.setString(1, sc.nextLine());
 
-            System.out.print("Enter student email: ");
+            System.out.print("Enter email: ");
             ps.setString(2, sc.nextLine());
 
-            System.out.print("Enter student phone number: ");
+            System.out.print("Enter phone: ");
             ps.setString(3, sc.nextLine());
 
-            int rows = ps.executeUpdate();
+            ps.executeUpdate();
+            System.out.println("Record inserted successfully.");
 
-            System.out.println(rows + " student record inserted successfully.");
+            ResultSet rs = con.createStatement().executeQuery(
+                "SELECT [Name], Email, Phone FROM STUDENT");
 
-            Statement st = con.createStatement();
-
-            ResultSet rs = st.executeQuery(
-                    "SELECT Name, Email, Phone FROM STUDENT");
-
-            System.out.println("\nAll Student Records");
-            System.out.println("------------------------------");
-
-            while (rs.next()) {
-                System.out.println("Name: " + rs.getString("Name"));
-                System.out.println("Email: " + rs.getString("Email"));
-                System.out.println("Phone: " + rs.getString("Phone"));
-                System.out.println("------------------------------");
-            }
+            while (rs.next())
+                System.out.println(rs.getString(1) + " | " +
+                    rs.getString(2) + " | " + rs.getString(3));
 
             rs.close();
-            st.close();
             ps.close();
-            sc.close();
-            con.close();
-
-        } catch (Exception e) {
-            System.out.println("Error: " + e.getMessage());
         }
     }
 }
 
+// search - ucanaccess github download
+
 // javac -cp ".;ucanaccess-5.2.0-uber.jar" L11_MSaccess.java
 // java -cp ".;ucanaccess-5.2.0-uber.jar" L11_MSaccess
-
-// search - ucanaccess github download

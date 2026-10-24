@@ -5,7 +5,6 @@ public class L12_MySQLCRUD {
     public static void main(String[] args) throws Exception {
         Connection con = DriverManager.getConnection(
             "jdbc:mysql://localhost:3306/labdb", "root", "2300");
-
         Scanner sc = new Scanner(System.in);
 
         while (true) {
@@ -16,66 +15,53 @@ public class L12_MySQLCRUD {
 
             if (ch == 5) break;
 
-            if (ch == 1) {
-                System.out.print("ID: ");
-                int id = sc.nextInt();
-                sc.nextLine();
-                System.out.print("Name: ");
-                String name = sc.nextLine();
-                System.out.print("Email: ");
-                String email = sc.nextLine();
-
-                PreparedStatement ps = con.prepareStatement(
-                    "INSERT INTO student VALUES(?,?,?)");
-                ps.setInt(1, id);
-                ps.setString(2, name);
-                ps.setString(3, email);
-                ps.executeUpdate();
-                System.out.println("Record inserted.");
-            }
-
-            else if (ch == 2) {
-                System.out.print("Enter ID to delete: ");
-                int id = sc.nextInt();
-
-                PreparedStatement ps = con.prepareStatement(
-                    "DELETE FROM student WHERE id=?");
-                ps.setInt(1, id);
-                System.out.println(ps.executeUpdate() > 0
-                    ? "Record deleted." : "Record not found.");
-            }
-
-            else if (ch == 3) {
-                System.out.print("Enter ID to edit: ");
-                int id = sc.nextInt();
-                sc.nextLine();
-                System.out.print("New name: ");
-                String name = sc.nextLine();
-                System.out.print("New email: ");
-                String email = sc.nextLine();
-
-                PreparedStatement ps = con.prepareStatement(
-                    "UPDATE student SET name=?, email=? WHERE id=?");
-                ps.setString(1, name);
-                ps.setString(2, email);
-                ps.setInt(3, id);
-                System.out.println(ps.executeUpdate() > 0
-                    ? "Record updated." : "Record not found.");
-            }
-
-            else if (ch == 4) {
+            if (ch == 4) {
                 ResultSet rs = con.createStatement().executeQuery(
                     "SELECT * FROM student");
-
                 while (rs.next())
                     System.out.println(rs.getInt("id") + "  "
                         + rs.getString("name") + "  "
                         + rs.getString("email"));
+                rs.close();
+                continue;
             }
 
-            else {
+            if (ch < 1 || ch > 4) {
                 System.out.println("Invalid choice.");
+                continue;
             }
+
+            System.out.print(ch == 1 ? "ID: " :
+                ch == 2 ? "Enter ID to delete: " : "Enter ID to edit: ");
+            int id = sc.nextInt();
+            sc.nextLine();
+
+            String sql = ch == 1 ? "INSERT INTO student VALUES(?,?,?)" :
+                         ch == 2 ? "DELETE FROM student WHERE id=?" :
+                         "UPDATE student SET name=?, email=? WHERE id=?";
+
+            PreparedStatement ps = con.prepareStatement(sql);
+
+            if (ch == 2) {
+                ps.setInt(1, id);
+            } else {
+                if (ch == 1) ps.setInt(1, id);
+
+                System.out.print(ch == 1 ? "Name: " : "New name: ");
+                String name = sc.nextLine();
+                System.out.print(ch == 1 ? "Email: " : "New email: ");
+                String email = sc.nextLine();
+
+                ps.setString(ch == 1 ? 2 : 1, name);
+                ps.setString(ch == 1 ? 3 : 2, email);
+                if (ch == 3) ps.setInt(3, id);
+            }
+
+            int n = ps.executeUpdate();
+            System.out.println(ch == 1 ? "Record inserted." :
+                n == 0 ? "Record not found." :
+                ch == 2 ? "Record deleted." : "Record updated.");
+            ps.close();
         }
 
         con.close();
