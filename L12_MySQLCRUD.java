@@ -83,6 +83,21 @@ public class L12_MySQLCRUD {
     }
 }
 
+/*
+
+CREATE DATABASE labdb;
+USE labdb;
+
+CREATE TABLE student (
+    id INT PRIMARY KEY,
+    name VARCHAR(50),
+    email VARCHAR(100)
+);
+
+*/
+// mysql community download ---- for mysql
+// mysql community connector download ---- for connector driver
+
 // javac -cp ".;mysql-connector-j-26.10.0.jar" L12_MySQLCRUD.java
 
 // java -cp ".;mysql-connector-j-26.10.0.jar" L12_MySQLCRUD
